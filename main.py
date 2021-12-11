@@ -1,4 +1,9 @@
 import asyncio
+import uuid
+
+
+FILE_NAME = uuid.uuid1()
+
 
 async def arhivate(path_to_folder):
     cmd = f"zip -r - {path_to_folder} | cat"
@@ -6,17 +11,15 @@ async def arhivate(path_to_folder):
         cmd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE)
-
-    stdout, stderr = await proc.communicate()
-
     print(f'[{cmd!r} exited with {proc.returncode}]')
-    if stdout:
-        print(f'[stdout]\n{stdout}')
-    if stderr:
-        print(f'[stderr]\n{stderr.decode()}')
-    with open('some.zip', 'wb') as file:
-        file.write(stdout)
+    stdout = proc.stdout
+    while not stdout.at_eof():
+        stdout_bytes = await stdout.read(10)
 
+        if stdout:
+            print(f'[stdout]\n{stdout_bytes}')
+        with open(f'{FILE_NAME}.zip', 'ab') as file:
+            file.write(stdout_bytes)
 
 
 if __name__ == '__main__':
