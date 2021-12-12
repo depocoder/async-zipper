@@ -1,6 +1,7 @@
 import asyncio
 from aiohttp import web
 import aiofiles
+from pathlib import Path
 
 
 INTERVAL_SECS = 1
@@ -24,8 +25,10 @@ async def archivate(request):
     if not archive_hash:
         # todo write logic for empty archive_hash
         raise NotImplementedError
-
-    cmd = f"zip -r - test_photos/{archive_hash} | cat"
+    path_to_archive = Path(f'test_photos/{archive_hash}')
+    if not path_to_archive.exists() or not path_to_archive.is_dir() or not archive_hash:
+        raise web.HTTPNotFound()
+    cmd = f"zip -r - {path_to_archive} | cat"
     proc = await asyncio.create_subprocess_shell(
         cmd,
         stdout=asyncio.subprocess.PIPE,
