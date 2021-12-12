@@ -1,9 +1,15 @@
+import logging
+from pathlib import Path
+
 import asyncio
 from aiohttp import web
 import aiofiles
-from pathlib import Path
 
+from settings import DEBUG_MODE
 
+logger = logging.getLogger(__name__)
+if DEBUG_MODE:
+    logging.basicConfig(level=logging.DEBUG)
 INTERVAL_SECS = 1
 DEFAULT_BYTES_FOR_READ = 1024 * 1024 * 8
 
@@ -25,9 +31,10 @@ async def archivate(request):
     path_to_archive = Path(f'test_photos/{archive_hash}')
     if not path_to_archive.exists() or not path_to_archive.is_dir() or not archive_hash:
         raise web.HTTPNotFound()
-    cmd = f"zip -r - {path_to_archive} | cat"
+    cmd = f"zip -r - * | cat"
     proc = await asyncio.create_subprocess_shell(
         cmd,
+        cwd=path_to_archive.as_posix(),
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE)
 
@@ -38,8 +45,7 @@ async def archivate(request):
     while not stdout.at_eof():
         stdout_bytes = await stdout.read(DEFAULT_BYTES_FOR_READ)
 
-        if stdout:
-            print(f'[stdout]\n{len(stdout_bytes)}')
+        logger.info(f'[Sending archive chunk ... ] {len(stdout_bytes)}')
         # Отправляет клиенту очередную порцию ответа
         await response.write(stdout_bytes)
         await asyncio.sleep(INTERVAL_SECS)
