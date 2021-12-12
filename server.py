@@ -22,9 +22,6 @@ async def archivate(request):
     archive_hash = request.match_info.get('archive_hash')
     response.headers['Content-Disposition'] = f'filename = "{archive_hash}.zip"'
 
-    if not archive_hash:
-        # todo write logic for empty archive_hash
-        raise NotImplementedError
     path_to_archive = Path(f'test_photos/{archive_hash}')
     if not path_to_archive.exists() or not path_to_archive.is_dir() or not archive_hash:
         raise web.HTTPNotFound()
