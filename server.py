@@ -44,11 +44,12 @@ async def archivate(request):
     stdout = proc.stdout
     while not stdout.at_eof():
         stdout_bytes = await stdout.read(DEFAULT_BYTES_FOR_READ)
-
         logger.info(f'[Sending archive chunk ... ] {len(stdout_bytes)}')
         # Отправляет клиенту очередную порцию ответа
+        if DEBUG_MODE:
+            logger.info(f'sleep for {INTERVAL_SECS}')
+            await asyncio.sleep(INTERVAL_SECS)
         await response.write(stdout_bytes)
-        await asyncio.sleep(INTERVAL_SECS)
     return response
 
 
