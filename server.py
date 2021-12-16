@@ -10,7 +10,7 @@ import aiofiles
 from settings import DEBUG_MODE, MEDIA_DIR, DEFAULT_BYTES_FOR_READ, INTERVAL_SECS
 
 
-parser = argparse.ArgumentParser(description="async-zipper")
+parser = argparse.ArgumentParser()
 parser.add_argument('--path')
 parser.add_argument('--port')
 logger = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ async def archivate(request):
 
     # Отправляет клиенту HTTP заголовки
     await response.prepare(request)
+    response.enable_chunked_encoding()
     stdout = proc.stdout
 
     try:
