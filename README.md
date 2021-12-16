@@ -20,12 +20,16 @@
 ```
 
 
-## Как установить
+## Как установить (Linux)
 
-Для работы микросервиса нужен Python версии не ниже 3.6.
+Для работы микросервиса нужен Python версии не ниже 3.6. 
 
 ```bash
 pip install -r requirements.txt
+```
+
+```bash
+apt-get update && apt-get install -y zip
 ```
 
 ## Как запустить
