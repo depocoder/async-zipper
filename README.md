@@ -38,6 +38,21 @@ python server.py
 
 ## Как развернуть на сервере
 
+Создайте файл .env
+
+В файл .env укажите при необходимости переменные окружения
+`DEBUG` - Режим отладки
+`MEDIA_DIR` - Путь до папки с хэшами
+`INTERVAL_SECS` - Сколько секунд ожидать между отправкой чанками
+
+Пример .env файла
+```
+DEBUG=True
+MEDIA_DIR=my_dir
+INTERVAL_SECS=10
+```
+
+
 ```bash
 docker build -t depocode/async-zipper:master .
 docker-compose up -d
