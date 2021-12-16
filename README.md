@@ -58,7 +58,7 @@ INTERVAL_SECS=10
 
 
 ```bash
-docker build -t depocode/async-zipper:master .
+docker-compose build
 docker-compose up -d
 ```
 
