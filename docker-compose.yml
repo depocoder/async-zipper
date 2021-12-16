@@ -1,0 +1,15 @@
+version: '3.3'
+
+services:
+  web:
+    image: depocode/async-zipper:master
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    command: python server.py --path 127.0.0.1 --port 8000
+    volumes:
+      - ./:/usr/src/app/
+    env_file:
+      - ./.env

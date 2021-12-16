@@ -1,6 +1,7 @@
 import logging
 from asyncio import CancelledError
 from pathlib import Path
+import argparse
 
 import asyncio
 from aiohttp import web
@@ -8,6 +9,10 @@ import aiofiles
 
 from settings import DEBUG_MODE, MEDIA_DIR, DEFAULT_BYTES_FOR_READ, INTERVAL_SECS
 
+
+parser = argparse.ArgumentParser(description="async-zipper")
+parser.add_argument('--path')
+parser.add_argument('--port')
 logger = logging.getLogger(__name__)
 if DEBUG_MODE:
     logging.basicConfig(level=logging.DEBUG)
@@ -79,5 +84,5 @@ if __name__ == '__main__':
         web.get('/', handle_index_page),
 
     ])
-    web.run_app(app)
-
+    args = parser.parse_args()
+    web.run_app(app, path=args.path, port=args.port)

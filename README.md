@@ -39,7 +39,8 @@ python server.py
 ## Как развернуть на сервере
 
 ```bash
-python server.py
+docker build -t depocode/async-zipper:master .
+docker-compose up -d
 ```
 
 После этого перенаправить на микросервис запросы, начинающиеся с `/archive/`. Например:
