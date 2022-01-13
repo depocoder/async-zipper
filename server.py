@@ -66,7 +66,7 @@ async def archivate(request):
 
 if __name__ == '__main__':
     app = web.Application()
-    app['media_dir'] = os.getenv('MEDIA_DIR', 'test_photos')
+    app['media_dir'] = MEDIA_DIR
     app.add_routes([
         web.get('/archive/{archive_hash}/', archivate),
         web.get('/', handle_index_page),
