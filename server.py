@@ -1,4 +1,3 @@
-import os
 from asyncio import CancelledError
 from pathlib import Path
 
@@ -60,8 +59,9 @@ async def archivate(request):
         logger.debug(f'Unexpected exception caught {e}', exc_info=True)
         raise
     finally:
-        proc.kill()
-        outs, errs = proc.communicate()
+        if proc.returncode is None:
+            proc.kill()
+            outs, errs = await proc.communicate()
 
 
 if __name__ == '__main__':
