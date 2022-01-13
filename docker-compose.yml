@@ -10,6 +10,6 @@ services:
       - 8000:8000
     command: python server.py --path 127.0.0.1 --port 8000
     volumes:
-      - ./:/usr/src/app/
+      - ./:/app
     env_file:
       - ./.env

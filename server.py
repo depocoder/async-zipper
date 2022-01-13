@@ -1,21 +1,16 @@
-import logging
+import os
 from asyncio import CancelledError
 from pathlib import Path
-import argparse
 
 import asyncio
 from aiohttp import web
 import aiofiles
 
-from settings import DEBUG_MODE, MEDIA_DIR, DEFAULT_BYTES_FOR_READ, INTERVAL_SECS
+from utils import create_logger, create_parser
+from settings import DEFAULT_BYTES_FOR_READ, INTERVAL_SECS, MEDIA_DIR
 
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--path')
-parser.add_argument('--port')
-logger = logging.getLogger(__name__)
-if DEBUG_MODE:
-    logging.basicConfig(level=logging.DEBUG)
+parser = create_parser()
+logger = create_logger()
 
 
 async def handle_index_page(request):
@@ -29,18 +24,17 @@ async def archivate(request):
 
     # Большинство браузеров не отрисовывают частично загруженный контент, только если это не HTML.
     # Поэтому отправляем клиенту именно HTML, указываем это в Content-Type.
-    archive_hash = request.match_info.get('archive_hash')
+    archive_hash = request.match_info['archive_hash']
     response.headers['Content-Disposition'] = f'filename = "{archive_hash}.zip"'
 
-    path_to_archive = Path(MEDIA_DIR, f'{archive_hash}')
-    if not path_to_archive.exists() or not path_to_archive.is_dir() or not archive_hash:
+    path_to_archive = Path(app['media_dir'], f'{archive_hash}')
+    if not path_to_archive.exists() or not path_to_archive.is_dir():
         raise web.HTTPNotFound()
-    cmd = f"zip -r - * | cat"
-    proc = await asyncio.create_subprocess_shell(
-        cmd,
+    cmd = 'zip', '-r', '-', '.',
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
         cwd=path_to_archive.as_posix(),
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE)
+        stdout=asyncio.subprocess.PIPE,)
 
     # Отправляет клиенту HTTP заголовки
     await response.prepare(request)
@@ -49,10 +43,10 @@ async def archivate(request):
 
     try:
         while not stdout.at_eof():
-            logger.info('start read bytes')
+            logger.debug('start read bytes')
             stdout_bytes = await stdout.read(DEFAULT_BYTES_FOR_READ)
             # Отправляет клиенту очередную порцию ответа
-            logger.info(f'[Sending archive chunk ... ] {len(stdout_bytes)}')
+            logger.debug(f'[Sending archive chunk ... ] {len(stdout_bytes)}')
 
             await response.write(stdout_bytes)
             if INTERVAL_SECS:
@@ -60,26 +54,19 @@ async def archivate(request):
 
         return response
     except CancelledError:
-        logger.info('Download was interrupted')
+        logger.debug('Download was interrupted')
+        raise
     except Exception as e:
-        logger.exception(f'Unexpected exception caught {e}')
+        logger.debug(f'Unexpected exception caught {e}', exc_info=True)
+        raise
     finally:
-        proc_pid = proc.pid
-        # kill child processes
-        kill_proc = await asyncio.create_subprocess_shell(
-            f'./rkill.sh {proc_pid}',
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        await kill_proc.wait()
-        if proc.returncode is None:
-            logger.info(f'Kill {proc_pid}')
-            proc.kill()
-            outs, errs = proc.communicate()
+        proc.kill()
+        outs, errs = proc.communicate()
 
 
 if __name__ == '__main__':
     app = web.Application()
+    app['media_dir'] = os.getenv('MEDIA_DIR', 'test_photos')
     app.add_routes([
         web.get('/archive/{archive_hash}/', archivate),
         web.get('/', handle_index_page),
