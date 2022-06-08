@@ -56,9 +56,9 @@ MEDIA_DIR=my_dir
 INTERVAL_SECS=10
 ```
 
-
+Запустите контейнеры
+> Build контейнеров будет автоматически
 ```bash
-docker-compose build
 docker-compose up -d
 ```
 
